@@ -1,0 +1,222 @@
+<div class="scene">
+    <div class="score"></div>
+    <div class="rabbit"></div>
+</div>
+
+<style>
+    .scene {
+        width: 600px;
+        height: 320px;
+        overflow: hidden;
+        position: relative;
+        border: 1px solid #000;
+        background: #c2e1fe;
+    }
+
+    .scene::before {
+        content: 'Game Over';
+        position: absolute;
+        text-align: center;
+        top: 50px;
+        left: 0;
+        right: 0;
+        font-family: Tahoma;
+        color: #274d79;
+        font-size: 42px;
+        display: none;
+    }
+
+    .scene.gameover::before {
+        display: block;
+    }
+
+    .scene::after {
+        content: '';
+        border-top: 1px solid #000;
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 90px;
+        background: #caab79;
+        z-index: 1;
+    }
+
+    .score {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+
+    .rabbit {
+        background-image: url("rabbit.png");
+        background-repeat: no-repeat;
+        background-position: 0 -22px;
+        position: absolute;
+        z-index: 2;
+    }
+
+    .obstacle {
+        background-image: url('cactus.png');
+        background-repeat: no-repeat;
+        background-size: cover;
+        position: absolute;
+        z-index: 2;
+    }
+</style>
+
+<script>
+    var score = 0;
+    var elScore = document.querySelector('.score');
+    var drawScore = function() {
+        elScore.innerText = score;
+    };
+    var scene = document.querySelector('.scene');
+    var isGameOver = false;
+
+    var isHit = function(r1, r2) {
+        if (
+            (((r2.y > r1.y) && (r2.y < r1.y + r1.height)) || ((r2.y + r2.height > r1.y) && (r2.y + r2.height < r1.y + r1.height))) &&
+            (((r2.x > r1.x) && (r2.x < r1.x + r1.width )) || ((r2.x + r2.width  > r1.x) && (r2.x + r2.width  < r1.x + r1.width )))
+        ) {
+            return true;
+        } else {
+            return false;
+        }
+    };
+
+    var Obstacle = function() {};
+    Obstacle.prototype = {
+        x: 600,
+        y: 139,
+        width: 50,
+        height: 100,
+        el: null,
+        init: function() {
+            this.el = document.createElement('div');
+            this.el.classList.add('obstacle');
+            scene.appendChild(this.el);
+            this.draw();
+            this.run();
+        },
+        draw: function() {
+            this.el.style.width = this.width + 'px';
+            this.el.style.height = this.height + 'px';
+            this.el.style.top = this.y;
+            this.el.style.left = this.x;
+        },
+        run: function() {
+            var step = 15; // ++
+            var id = setInterval(function() {
+                if (this.x > -50) {
+                    this.x -= step;
+                    this.draw();
+                    if (isHit(this, rabbit)) {
+                        isGameOver = true;
+                        scene.classList.add('gameover');
+                        clearInterval(id);
+                    }
+                } else {
+                    clearInterval(id);
+                    score++;
+                    drawScore();
+                    this.remove();
+                }
+            }.bind(this), 25);
+        },
+        remove: function() {
+            this.el.parentNode.removeChild(this.el);
+        }
+    };
+
+    var rabbit = {
+        x: 10,
+        y: 150,
+        width: 75,
+        height: 88,
+        el: document.querySelector('.rabbit'),
+        array: ['-10px', '-85px', '-160px', '-235px', '-310px', '-385px'],
+        state: 0,
+        inJump: false,
+        init: function() {
+            this.draw();
+            this.subscribe();
+            this.run();
+        },
+        draw: function() {
+            this.el.style.width = this.width + 'px';
+            this.el.style.height = this.height + 'px';
+            this.el.style.top = this.y;
+            this.el.style.left = this.x;
+        },
+        subscribe: function() {
+            document.addEventListener('keydown', function(event) {
+                if (event.keyCode === 32) {
+                    this.jump();
+                }
+            }.bind(this));
+        },
+        jump: function() {
+            if (this.inJump || isGameOver) {
+                return;
+            }
+
+            var counter = 35;
+            var step = 17;
+            this.inJump = true;
+            var id = setInterval(function() {
+                if (isGameOver) {
+                    clearInterval(id);
+                    return;
+                }
+
+                if (counter > 0) {
+                    this.y -= step;
+                    this.draw();
+                    step--;
+                } else {
+                    this.inJump = false;
+                    clearInterval(id);
+                }
+                counter--;
+            }.bind(this), 25);
+        },
+        run: function() {
+            var id = setInterval(function() {
+                if (this.inJump) {
+                    return;
+                }
+
+                if (isGameOver) {
+                    clearInterval(id);
+                    return;
+                }
+
+                this.changeSpriteToNext();
+            }.bind(this), 100);
+        },
+        changeSpriteToNext: function() {
+            this.state = this.state + 1;
+
+            if (this.state > this.array.length-1) {
+                this.state = 0;
+            }
+
+            this.el.style.backgroundPositionX = this.array[this.state];
+        }
+    };
+
+    drawScore();
+    rabbit.init();
+
+    var id = setInterval(function() {
+        if (isGameOver) {
+            clearInterval(id);
+            return;
+        }
+
+        var obstacle = new Obstacle();
+        obstacle.init();
+    }, 1000);// Math.ceil(Math.random()*3)
+
+</script>

@@ -1,0 +1,352 @@
+<div class="scene"></div>
+<div class="finish hidden">The End!</div>
+
+<style>
+    .hidden {
+        display: none;
+    }
+
+    .scene {
+        width: 800px;
+        height: 272px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid black;
+    }
+
+    .finish {
+        width: 800px;
+        height: 272px;
+        border: 1px solid black;
+        background: black;
+        line-height: 272px;
+        text-align: center;
+        color: white;
+        font-size: 18px;
+        font-family: Tahoma;
+    }
+
+    .tile {
+        width: 16px;
+        height: 16px;
+        position: absolute;
+        background-image: url('mario_tileset.png');
+        background-repeat: no-repeat;
+        background-position: 16px 16px;
+    }
+
+    .tile.x_P {
+        background-position: -96px -112px;
+    }
+    .tile.x_k {
+        background-position: -144px -112px;
+    }
+    .tile.x_c {
+        background-position: -128px -112px;
+    }
+    .tile.x_t {
+        background-position: 0 -48px;
+        width: 32px;
+        height: 48px;
+    }
+    .tile.x_g {
+        background-position: 0 -128px;
+        width: 48px;
+        height: 32px;
+    }
+    .tile.x_G2 {
+        background-position: -144px -208px;
+        width: 80px;
+        height: 48px;
+    }
+    .tile.x_d {
+        background-position: 0 -96px;
+        width: 80px;
+        height: 32px;
+    }
+    .tile.x_w {
+        background-position: -96px -224px;
+        width: 48px;
+        height: 32px;
+    }
+    .tile.x_r {
+        background-position: -112px -112px;
+    }
+
+    .hero {
+        width: 16px;
+        height: 16px;
+        position: absolute;
+        background-image: url('mario_tileset.png');
+        background-repeat: no-repeat;
+        background-position: -112px -144px;
+    }
+
+    .enemy {
+        width: 16px;
+        height: 16px;
+        position: absolute;
+        background-image: url('mario_tileset.png');
+        background-repeat: no-repeat;
+        background-position: 0 0;
+    }
+</style>
+
+<script>
+    var audioTheme = new Audio('mario_theme.ogg');
+    var audioJump = new Audio('mario_jump.ogg');
+    audioTheme.play();
+
+    var offsetX = 0;
+
+    var game = {
+        scene: document.querySelector('.scene'),
+        mapHeight: 17,
+        mapWidth: 150,
+        isKeyLeftPressed: false,
+        isKeyUpPressed: false,
+        isKeyRightPressed: false,
+        subscribe: function() {
+            document.addEventListener('keydown', function(event) {
+                if (event.keyCode === 37) {
+                    this.isKeyLeftPressed = true;
+                }
+                if (event.keyCode === 38) {
+                    this.isKeyUpPressed = true;
+                }
+                if (event.keyCode === 39) {
+                    this.isKeyRightPressed = true;
+                }
+            }.bind(this));
+
+            document.addEventListener('keyup', function(event) {
+                if (event.keyCode === 37) {
+                    this.isKeyLeftPressed = false;
+                }
+                if (event.keyCode === 38) {
+                    this.isKeyUpPressed = false;
+                }
+                if (event.keyCode === 39) {
+                    this.isKeyRightPressed = false;
+                }
+            }.bind(this));
+        },
+        map: [
+            '000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+            '0                                                                                                                                                    0',
+            '0                                                                                    w                                                               0',
+            '0                   w                                  w                   w                                     w                                   0',
+            '0                                      w                                                                                            w                0',
+            '0                                                                                                                                                    0',
+            '0                      c                                            c                                                                                0',
+            '0                                                                       r     kkkk                                                                   0',
+            '0                                       c                              rr                                                                            0',
+            '0                                                                     rrr                                                                            0',
+            '0               c    kkkkk                                           rrrr                                                                            0',
+            '0G                                     t0       c                   rrrrr            G                               kkk                             0',
+            '0           d    g       d             00              t0          rrrrrr                                                                            0',
+            '0                                      00              00         rrrrrrr                                                                            0',
+            'PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP',
+            'PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP',
+            'PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP',
+        ],
+        tiles: [],
+        drawMap: function() {
+            var i, j;
+
+            for (i=0; i<this.mapHeight; i++) {
+                this.tiles[i] = [];
+                for (j=0; j<this.mapWidth; j++) {
+                    var tile = document.createElement('div');
+                    tile.classList.add('tile');
+
+                    if (this.map[i][j] === 'P') { tile.classList.add('x_P'); }
+                    if (this.map[i][j] === 'k') { tile.classList.add('x_k'); }
+                    if (this.map[i][j] === 'c') { tile.classList.add('x_c'); }
+                    if (this.map[i][j] === 't') { tile.classList.add('x_t'); }
+                    if (this.map[i][j] === 'g') { tile.classList.add('x_g'); }
+                    if (this.map[i][j] === 'G') { tile.classList.add('x_G2'); }
+                    if (this.map[i][j] === 'd') { tile.classList.add('x_d'); }
+                    if (this.map[i][j] === 'w') { tile.classList.add('x_w'); }
+                    if (this.map[i][j] === 'r') { tile.classList.add('x_r'); }
+                    if (this.map[i][j] === ' ') { /* empty */ }
+                    if (this.map[i][j] === '0') { /* empty */ }
+
+                    // setPosition
+                    tile.style.top = i*16;
+                    tile.style.left = j*16;
+
+                    this.scene.appendChild(tile);
+                    this.tiles[i][j] = tile;
+                }
+            }
+        },
+        init: function() {
+            this.subscribe();
+            this.drawMap();
+        }
+    };
+
+    game.init();
+
+    var hero = {
+        dx: 0.1,
+        dy: 0.1,
+        onGround: false,
+        width: 16,
+        height: 16,
+        x: 6*16,
+        y: 11*16,
+        el: null,
+        currentFrame: 0,
+        update: function(time) {
+            this.x += this.dx * time;
+            this.collision(0);
+
+            if (!this.onGround) this.dy += 0.0005 * time;
+            this.y += this.dy * time;
+            this.onGround=false;
+            this.collision(1);
+
+            this.currentFrame += time * 0.005;
+            if (this.currentFrame > 3) { this.currentFrame -= 3; }
+            this.el.style.backgroundPositionX = -112-31*Math.floor(this.currentFrame)+'px';
+            if (this.dx > 0) { this.el.style.transform = 'scale(1, 1)'; }
+            if (this.dx < 0) { this.el.style.transform = 'scale(-1, 1)'; }
+
+            this.dx = 0;
+        },
+        collision: function(dir) {
+            var i, j;
+
+            for (i = Math.floor(this.y/16); i <= Math.floor((this.y+this.height)/16); i++) {
+                for (j = Math.floor(this.x/16); j <= Math.floor((this.x+this.width)/16); j++) {
+                    if (game.map[i][j] === 'P' || game.map[i][j] === 'k' || game.map[i][j] === '0' || game.map[i][j] === 'r' || game.map[i][j] === 't') {
+                        if ((this.dx > 0) && (dir === 0)) { this.x = j*16 - this.width - 1; }
+                        if ((this.dx < 0) && (dir === 0)) { this.x = j*16 + 16; }
+                        if ((this.dy > 0) && (dir === 1)) { this.y = i*16 - this.height - 1; this.dy = 0; this.onGround = true; }
+                        if ((this.dy < 0) && (dir === 1)) { this.y = i*16 + 16; this.dy = 0; }
+                    }
+
+                    if (game.map[i][j] === 'c') {
+                        game.tiles[i][j].classList.remove('x_c');
+                    }
+                }
+            }
+        },
+        isHit: function(rect) {
+            if (
+                (((this.y > rect.y) && (this.y < rect.y + rect.height)) || ((this.y + this.height > rect.y) && (this.y + this.height < rect.y + rect.height))) &&
+                (((this.x > rect.x) && (this.x < rect.x + rect.width )) || ((this.x + this.width  > rect.x) && (this.x + this.width  < rect.x + rect.width )))
+            ) {
+                return true;
+            } else {
+                return false;
+            }
+        },
+        draw: function() {
+            this.el.style.top = this.y;
+            this.el.style.left = this.x;
+        },
+        init: function() {
+            this.el = document.createElement('div');
+            this.el.classList.add('hero');
+            game.scene.appendChild(this.el);
+        }
+    };
+
+    var enemy = {
+        dx: 0.05,
+        life: true,
+        width: 16,
+        height: 16,
+        x: 48*16,
+        y: 13*16-1,
+        el: null,
+        currentFrame: 0,
+        update: function(time) {
+            this.x += this.dx * time;
+            this.collision();
+
+            this.currentFrame += time * 0.005;
+            if (this.currentFrame > 2) { this.currentFrame -= 2; }
+            this.el.style.backgroundPositionX = -18*Math.floor(this.currentFrame)+'px';
+
+            if (!this.life) { this.el.style.backgroundPositionX = '-58px'; }
+        },
+        collision: function(dir) {
+            var i, j;
+
+            for (i = Math.floor(this.y/16); i <= Math.floor((this.y+this.height)/16); i++) {
+                for (j = Math.floor(this.x/16); j <= Math.floor((this.x+this.width)/16); j++) {
+                    if (game.map[i][j] === 'P' || game.map[i][j] === 'k' || game.map[i][j] === '0' || game.map[i][j] === 'r' || game.map[i][j] === 't') {
+                        if (this.dx > 0) {
+                            this.x = j*16 - this.width -1;
+                            this.dx *= -1;
+                        } else if (this.dx < 0) {
+                            this.x = j*16 + 16;
+                            this.dx *= -1;
+                        }
+                    }
+                }
+            }
+        },
+        draw: function() {
+            this.el.style.top = this.y;
+            this.el.style.left = this.x;
+        },
+        init: function() {
+            this.el = document.createElement('div');
+            this.el.classList.add('enemy');
+            game.scene.appendChild(this.el);
+        }
+    };
+
+    hero.init();
+    enemy.init();
+
+    var id = setInterval(function() {
+        var time = 20;
+
+        if (game.isKeyLeftPressed) {
+            hero.dx = -0.1;
+        }
+        if (game.isKeyRightPressed) {
+            hero.dx = 0.1;
+        }
+        if (game.isKeyUpPressed) {
+            if (hero.onGround) {
+                hero.dy = -0.27;
+                hero.onGround = false;
+                audioJump.play();
+            }
+        }
+
+        hero.update(time);
+        enemy.update(time);
+
+        if (hero.isHit(enemy)) {
+            if (enemy.life) {
+                if (hero.dy > 0) {
+                    enemy.dx = 0;
+                    hero.dy = -0.2;
+                    enemy.life = false;
+                } else {
+                    hero.el.style.outline = '1px dotted red';
+                }
+            }
+        }
+
+        if (hero.x > 400) offsetX = hero.x - 400;
+        game.scene.scrollLeft = offsetX;
+
+        if (hero.x > 1400) {
+            document.querySelector('.finish').classList.remove('hidden');
+            game.scene.classList.add('hidden');
+            clearInterval(id);
+        }
+
+        hero.draw();
+        enemy.draw();
+    }, 1000/60);
+</script>

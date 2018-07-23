@@ -1,0 +1,101 @@
+<div class="table">
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+</div>
+<div class="result"></div>
+
+<style>
+    .table {
+        width: 150px;
+        height: 150px;
+        background: orangered;
+    }
+
+    .cell {
+        width: 50px;
+        height: 50px;
+        border: 1px solid white;
+        box-sizing: border-box;
+        float: left;
+        line-height: 50px;
+        text-align: center;
+        font-size: 40px;
+        text-transform: uppercase;
+        cursor: pointer;
+    }
+
+    .cell:hover {
+        background-color: #df3c00;
+    }
+</style>
+
+<script>
+    var table = document.querySelector('.table');
+    var cells = document.querySelectorAll('.cell');
+    var result = document.querySelector('.result');
+    var hod = 1;
+    var isFinished = false;
+    var isWinner = function(str) {
+        // 0 1 2
+        // 3 4 5
+        // 6 7 8
+        if (
+            cells[0].innerHTML === str && cells[1].innerHTML === str && cells[2].innerHTML === str ||
+            cells[3].innerHTML === str && cells[4].innerHTML === str && cells[5].innerHTML === str ||
+            cells[6].innerHTML === str && cells[7].innerHTML === str && cells[8].innerHTML === str ||
+
+            cells[0].innerHTML === str && cells[3].innerHTML === str && cells[6].innerHTML === str ||
+            cells[1].innerHTML === str && cells[4].innerHTML === str && cells[7].innerHTML === str ||
+            cells[2].innerHTML === str && cells[5].innerHTML === str && cells[8].innerHTML === str ||
+
+            cells[0].innerHTML === str && cells[4].innerHTML === str && cells[8].innerHTML === str ||
+            cells[2].innerHTML === str && cells[4].innerHTML === str && cells[6].innerHTML === str
+        ) {
+            return true;
+        } else {
+            return false;
+        }
+    };
+
+    table.addEventListener('click', function(event) {
+        console.log(event);
+
+        if (event.target.innerHTML === 'x' || event.target.innerHTML === '0' || isFinished) {
+            return;
+        }
+
+        if (event.target.className === 'cell') {
+            if (hod%2) {
+                event.target.innerHTML = 'x';
+            } else {
+                event.target.innerHTML = '0';
+            }
+        }
+
+        if (isWinner('x')) {
+            isFinished = true;
+            result.innerText = 'Победили крестики';
+        }
+
+        if (isWinner('0')) {
+            isFinished = true;
+            result.innerText = 'Победили нолики';
+        }
+
+        if (hod < 9) {
+            hod++;
+        } else {
+            isFinished = true;
+            if (isWinner('x') === false && isWinner('0') === false) {
+                result.innerText = 'Ничья';
+            }
+        }
+    });
+</script>
